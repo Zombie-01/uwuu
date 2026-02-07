@@ -1,0 +1,940 @@
+<!doctype html>
+<html lang="mn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Зулын Загдаа агсны нэрэмжит үндэсний бөхийн барилдаан</title>
+
+    <!-- External Dependencies -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;900&display=swap"
+      rel="stylesheet" />
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      body {
+        font-family: "Montserrat", sans-serif;
+        background-color: #e8eef1;
+        color: #061c6b;
+        scroll-behavior: smooth;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #e8eef1;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #1459ed;
+        border-radius: 10px;
+      }
+      @keyframes scale-in {
+        0% {
+          transform: scale(0.95);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .animate-scale-in {
+        animation: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes fade-up {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fade-up {
+        animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+      @keyframes infinite-scroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+      .animate-infinite-scroll {
+        animation: infinite-scroll 40s linear infinite;
+      }
+      .social-sidebar-item {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+      }
+    </style>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@^19.2.4",
+          "react-dom": "https://esm.sh/react-dom@^19.2.4",
+          "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
+          "@google/genai": "https://esm.sh/@google/genai@^1.40.0",
+          "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+          "react/": "https://esm.sh/react@^19.2.4/"
+        }
+      }
+    </script>
+  </head>
+  <body class="custom-scrollbar overflow-x-hidden">
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+      import React, { useState, useEffect, useRef } from "react";
+      import { createRoot } from "react-dom/client";
+      import { GoogleGenAI } from "@google/genai";
+
+      // --- CONSTANTS & DATA ---
+      const EVENT_INFO = {
+        date: "2026-02-13T14:00:00",
+        formattedDate: "2026 оны 2 дугаар сарын 13",
+        formattedTime: "14:00",
+        location: "СПОРТ ЦОГЦОЛБОР",
+        address: "Сүхбаатар аймаг, Баруун-Урт хот",
+        generalSponsor: '"ӨНДӨР ХАМАР" ХХК ХОРШОО',
+        organizers: [
+          {
+            name: "СҮХБААТАР АЙМГИЙН ЗДТГ",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Sukhbaatar_aimag_Logo.png/120px-Sukhbaatar_aimag_Logo.png",
+          },
+          {
+            name: "ЗУЛЫН ЗАГДАА АГСНЫ ГЭР БҮЛ, ҮР ХҮҮХДҮҮД",
+            logo: "https://raw.githubusercontent.com/stackblitz/stackblitz-images/main/grandfather-portrait-refined.png",
+          },
+          {
+            name: "СҮХБААТАР АЙМГИЙН БТСГ",
+            logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Sukhbaatar_aimag_Logo.png/120px-Sukhbaatar_aimag_Logo.png",
+          },
+        ],
+        sponsors: [
+          { name: '"ӨНДӨР ХАМАР" ХХК ХОРШОО', type: "Ерөнхий ивээн тэтгэгч" },
+          {
+            name: "СҮХБААТАР АЙМГИЙН ЗАСАГ ДАРГЫН ТАМГЫН ГАЗАР",
+            type: "Дэмжигч",
+          },
+          {
+            name: "ЗУЛЫН ЗАГДАА АГСНЫ ГЭР БҮЛ, ҮР ХҮҮХДҮҮД",
+            type: "Зохион байгуулагч",
+          },
+          { name: "СҮХБААТАР АЙМГИЙН БТСГ", type: "Дэмжигч" },
+        ],
+        title: {
+          prefix: "СҮХБААТАР АЙМГИЙН ХАЛЗАН СУМЫН ХАРЬЯАТ ЦЭРГИЙН ЗААН",
+          highlight: "ЗУЛЫН ЗАГДАА АГСНЫ НЭРЭМЖИТ",
+          suffix: "САР ШИНИЙН БАЯРТ ЗОРИУЛСАН ХҮЧИТ БӨХИЙН БАРИЛДААН",
+        },
+      };
+
+      const BIOGRAPHY = {
+        name: "ЗУЛЫН ЗАГДАА",
+        hometown: "СҮХБААТАР АЙМАГ, ХАЛЗАН СУМ",
+        achievements: "АЛДАРТ УЯАЧ, ЦЭРГИЙН ЗААН",
+        images: [
+          "/images/OK.png",
+          "/images/OK1.png",
+          "/images/OK2.png",
+          "/images/OK3.png",
+        ],
+        description:
+          "СҮХБААТАР АЙМГИЙН ХАЛЗАН СУМЫН ХАРЬЯАТ, АЛДАРТ УЯАЧ, ЦЭРГИЙН ЗААН ЦОЛТОЙ САЙХАН БУУРАЙ МИНЬ БАЙЛАА. ТҮҮНИЙ ҮР ХҮҮХДҮҮД, АХ ДҮҮС НЬ ААВЫНХАА ГЭГЭЭН ДУРСГАЛД ЗОРИУЛЖ, САР ШИНИЙН БАЯРТ ЗОРИУЛСАН ХҮЧИТ БӨХИЙН БАРИЛДААНЫГ НУТАГ ОРОНДОО ЖИЛ БҮР УЛАМЖЛАЛ БОЛГОН ЗОХИОН БАЙГУУЛЖ БАЙНА.",
+      };
+
+      const FAMILY_DATA = {
+        children: [
+          {
+            name: "Том хүү А",
+            role: "Үүсгэн байгуулагч",
+            photo: "https://picsum.photos/600/400?person=1",
+          },
+          {
+            name: "Хүү Б",
+            role: "Зохион байгуулагч",
+            photo: "https://picsum.photos/600/400?person=2",
+          },
+          {
+            name: "Охин В",
+            role: "Дэмжигч",
+            photo: "https://picsum.photos/600/400?person=3",
+          },
+          {
+            name: "Хүү Г",
+            role: "Зохион байгуулагч",
+            photo: "https://picsum.photos/600/400?person=4",
+          },
+          {
+            name: "Хүү Д",
+            role: "Дэмжигч",
+            photo: "https://picsum.photos/600/400?person=5",
+          },
+          {
+            name: "Охин Е",
+            role: "Дэмжигч",
+            photo: "https://picsum.photos/600/400?person=6",
+          },
+          {
+            name: "Хүү Ж",
+            role: "Зохион байгуулагч",
+            photo: "https://picsum.photos/600/400?person=7",
+          },
+          {
+            name: "Хүү З",
+            role: "Дэмжигч",
+            photo: "https://picsum.photos/600/400?person=8",
+          },
+          {
+            name: "Бага хүү И",
+            role: "Зохион байгуулагч",
+            photo: "https://picsum.photos/600/400?person=9",
+          },
+        ],
+        gallery: [
+          {
+            url: "https://picsum.photos/800/600?family=1",
+            caption: "2000 ОН ЦАГААН САР-ХАЛЗАН СУМ",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=2",
+            caption: "1995 ОН НААДАМ-БАЙШИНТ-УУЛ",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=3",
+            caption: "ГЭР БҮЛИЙН ЦУГЛАРАЛТ-2010 ОН",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=1",
+            caption: "2000 ОН ЦАГААН САР-ХАЛЗАН СУМ",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=2",
+            caption: "1995 ОН НААДАМ-БАЙШИНТ-УУЛ",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=3",
+            caption: "ГЭР БҮЛИЙН ЦУГЛАРАЛТ-2010 ОН",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=1",
+            caption: "2000 ОН ЦАГААН САР-ХАЛЗАН СУМ",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=2",
+            caption: "1995 ОН НААДАМ-БАЙШИНТ-УУЛ",
+          },
+          {
+            url: "https://picsum.photos/800/600?family=3",
+            caption: "ГЭР БҮЛИЙН ЦУГЛАРАЛТ-2010 ОН",
+          },
+        ],
+      };
+
+      const HISTORICAL_DATA = [
+        {
+          year: 2023,
+          title: "2023 ОНЫ БАРИЛДААН",
+          description: "Анхдугаар барилдаан Сүхбаатар аймагт боллоо.",
+        },
+        {
+          year: 2024,
+          title: "2024 ОНЫ БАРИЛДААН",
+          description: "Хоёрдугаар барилдаан амжилттай боллоо.",
+        },
+        {
+          year: 2025,
+          title: "2025 ОНЫ БАРИЛДААН",
+          description: "Гуравдугаар барилдаан амжилттай боллоо.",
+        },
+        {
+          year: 2026,
+          title: "2026 ОНЫ БАРИЛДААН",
+          description: "Дөрөвдүгээр барилдаан.",
+        },
+      ];
+
+      const TRANSLATIONS = {
+        mn: {
+          home: "НҮҮР",
+          about: "ТУХАЙ",
+          family: "ГЭР БҮЛ",
+          archive: "ОН ОНЫ БАРИЛДААН",
+          collaborate: "ХАМТРАХ",
+          details: "ДЭЛГЭРЭНГҮЙ",
+          days: "ӨДӨР",
+          hours: "ЦАГ",
+          mins: "МИНУТ",
+          secs: "СЕКУНД",
+          sponsor: "ИВЭЭН ТЭТГЭГЧИД",
+          organizer: "ЗОХИОН БАЙГУУЛАГЧИД",
+        },
+      };
+
+      const MOCK_WRESTLERS = [
+        {
+          id: "w1",
+          name: "О.Хангай",
+          title: "Улсын Аварга",
+          region: "Ховд аймаг",
+          photo: "https://picsum.photos/600/800?wrestler=1",
+          wins: 150,
+          losses: 20,
+          bio: "Монгол Улсын Даян Аварга.",
+        },
+        {
+          id: "w2",
+          name: "Б.Бат-Өлзий",
+          title: "Улсын Заан",
+          region: "Ховд аймаг",
+          photo: "https://picsum.photos/600/800?wrestler=2",
+          wins: 120,
+          losses: 35,
+          bio: "Монгол Улсын Заан.",
+        },
+        {
+          id: "w3",
+          name: "Ц.Содномдорж",
+          title: "Улсын Арслан",
+          region: "Хөвсгөл аймаг",
+          photo: "https://picsum.photos/600/800?wrestler=3",
+          wins: 140,
+          losses: 25,
+          bio: "Монгол Улсын Арслан.",
+        },
+        {
+          id: "w4",
+          name: "М.Бадарч",
+          title: "Улсын Арслан",
+          region: "Архангай аймаг",
+          photo: "https://picsum.photos/600/800?wrestler=4",
+          wins: 110,
+          losses: 40,
+          bio: "Монгол Улсын Арслан.",
+        },
+      ];
+
+      // --- NEW COMPONENT: COUNTDOWN TIMER ---
+      const CountdownTimer = ({ targetDate, translations }) => {
+        const [timeLeft, setTimeLeft] = useState({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+        });
+
+        useEffect(() => {
+          const timer = setInterval(() => {
+            const now = new Date().getTime();
+            const target = new Date(targetDate).getTime();
+            const distance = target - now;
+
+            if (distance > 0) {
+              setTimeLeft({
+                days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+                hours: Math.floor(
+                  (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+                ),
+                minutes: Math.floor(
+                  (distance % (1000 * 60 * 60)) / (1000 * 60),
+                ),
+                seconds: Math.floor((distance % (1000 * 60)) / 1000),
+              });
+            } else {
+              clearInterval(timer);
+            }
+          }, 1000);
+
+          return () => clearInterval(timer);
+        }, [targetDate]);
+
+        const TimeBlock = ({ value, label }) => (
+          <div className="flex flex-col items-center">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 w-20 h-20 md:w-28 md:h-28 rounded-3xl flex items-center justify-center mb-4 shadow-2xl">
+              <span className="text-3xl md:text-5xl font-black tracking-tighter">
+                {value.toString().padStart(2, "0")}
+              </span>
+            </div>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">
+              {label}
+            </span>
+          </div>
+        );
+
+        return (
+          <div className="flex gap-4 md:gap-8 justify-center animate-fade-up">
+            <TimeBlock value={timeLeft.days} label={translations.days} />
+            <TimeBlock value={timeLeft.hours} label={translations.hours} />
+            <TimeBlock value={timeLeft.minutes} label={translations.mins} />
+            <TimeBlock value={timeLeft.seconds} label={translations.secs} />
+          </div>
+        );
+      };
+
+      // --- GEMINI SERVICE ---
+      const getWrestlingAdvice = async (query) => {
+        const ai = new GoogleGenAI({ apiKey: "YOUR_API_KEY" });
+        try {
+          const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: query,
+            config: {
+              systemInstruction:
+                "Та бол Зулын Загдаа агсны нэрэмжит барилдааны албан ёсны AI туслах юм. Мэдээлэл өгөхдөө маш хүндэтгэлтэй, дэлгэрэнгүй хариулна. Монгол хэлээр хариулна.",
+              temperature: 0.7,
+            },
+          });
+          return response.text;
+        } catch (error) {
+          console.error(error);
+          return "Алдаа гарлаа. Дахин оролдоно уу.";
+        }
+      };
+
+      // --- OTHER COMPONENTS ---
+
+      const SocialSidebar = () => (
+        <div className="fixed left-0 top-1/2 -translate-y-1/2 z-[100] hidden xl:flex flex-col gap-10 items-center py-10 px-4 bg-white/20 backdrop-blur-2xl rounded-r-3xl border border-white/30 shadow-2xl animate-fade-up">
+          <a href="#" className="group flex flex-col items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-[#1877F2] flex items-center justify-center shadow-lg group-hover:scale-125 group-hover:-translate-y-1 transition-all">
+              <span className="text-white font-black text-xs">FB</span>
+            </div>
+          </a>
+          <a href="#" className="group flex flex-col items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] flex items-center justify-center shadow-lg group-hover:scale-125 group-hover:-translate-y-1 transition-all">
+              <span className="text-white font-black text-xs">IG</span>
+            </div>
+          </a>
+          <div className="w-px h-20 bg-gradient-to-b from-[#1459ed]/50 to-transparent"></div>
+          <span className="social-sidebar-item text-[8px] font-black uppercase tracking-[0.5em] text-[#061c6b]/30">
+            FOLLOW US
+          </span>
+        </div>
+      );
+
+      const AIExpert = () => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [query, setQuery] = useState("");
+        const [response, setResponse] = useState("");
+        const [loading, setLoading] = useState(false);
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+          if (!query.trim()) return;
+          setLoading(true);
+          setResponse("");
+          const result = await getWrestlingAdvice(query);
+          setResponse(result || "");
+          setLoading(false);
+        };
+
+        return (
+          <div className="fixed bottom-10 right-10 z-[1000] flex flex-col items-end">
+            {isOpen && (
+              <div className="mb-6 w-[320px] md:w-[380px] bg-white rounded-[32px] shadow-[0_40px_100px_rgba(6,28,107,0.3)] border border-[#e8eef1] overflow-hidden flex flex-col animate-scale-in origin-bottom-right">
+                <div className="bg-[#061c6b] p-6 text-white flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#1459ed] rounded-xl flex items-center justify-center font-black">
+                      AI
+                    </div>
+                    <div>
+                      <h4 className="font-black text-[10px] uppercase tracking-widest">
+                        Wrestling Expert
+                      </h4>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
+                        <p className="text-[8px] font-bold uppercase tracking-widest text-green-400">
+                          Online
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="hover:rotate-90 transition-transform p-2 bg-white/10 rounded-xl">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path d="M6 18L18 6M6 6l12 12" strokeWidth="2.5" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="p-6 h-[380px] overflow-y-auto bg-[#e8eef1]/30 flex flex-col gap-4 custom-scrollbar">
+                  <div className="bg-white p-4 rounded-2xl shadow-sm text-[11px] font-medium leading-relaxed max-w-[85%] border border-gray-100">
+                    Сайн байна уу? Би танд Зулын Загдаа агсны барилдааны талаар
+                    мэдээлэл өгөх боломжтой.
+                  </div>
+                  {response && (
+                    <div className="bg-[#1459ed] text-white p-4 rounded-2xl shadow-xl text-[11px] font-medium self-end max-w-[90%] leading-relaxed animate-fade-up">
+                      {response}
+                    </div>
+                  )}
+                  {loading && (
+                    <div className="bg-white/50 p-2 rounded-lg text-[9px] font-bold">
+                      Уншиж байна...
+                    </div>
+                  )}
+                </div>
+                <form
+                  onSubmit={handleSubmit}
+                  className="p-4 bg-white border-t border-gray-100">
+                  <div className="flex gap-2 bg-[#e8eef1] p-2 rounded-xl">
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="flex-grow bg-transparent border-none px-2 text-[11px] font-bold focus:ring-0 outline-none text-[#061c6b]"
+                      placeholder="Асуултаа бичнэ үү..."
+                    />
+                    <button className="bg-[#061c6b] text-white w-10 h-10 flex items-center justify-center rounded-xl hover:scale-105 transition-all">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20">
+                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                      </svg>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="w-16 h-16 bg-[#061c6b] text-white rounded-3xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all border-b-4 border-[#1459ed]">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                  strokeWidth="2"
+                />
+              </svg>
+            </button>
+          </div>
+        );
+      };
+
+      const Layout = ({ children, onViewChange, lang, setLang }) => {
+        const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+        const t = TRANSLATIONS[lang];
+
+        return (
+          <div className="min-h-screen flex flex-col bg-[#e8eef1]">
+            <SocialSidebar />
+            <header className="bg-[#1459ed] text-white py-5 px-6 sticky top-0 z-[200] shadow-2xl border-b border-white/10">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+                <div
+                  className="flex items-center gap-4 cursor-pointer"
+                  onClick={() => onViewChange("home")}>
+                  <div className="bg-white overflow-hidden rounded-lg shadow-lg transform hover:scale-110 transition-transform">
+                    <img src="/images/OK.png" className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-black tracking-tighter uppercase leading-none">
+                      ЗУЛЫН ЗАГДАА
+                    </h1>
+                    <p className="text-[9px] text-white/60 font-bold uppercase tracking-[0.3em] mt-1">
+                      Memorial Tournament
+                    </p>
+                  </div>
+                </div>
+                <nav className="flex items-center gap-8 text-[10px] font-black tracking-widest uppercase">
+                  <button
+                    onClick={() => onViewChange("home")}
+                    className="hover:text-blue-200 transition-colors">
+                    {t.home}
+                  </button>
+                  <a
+                    href="#about"
+                    onClick={() => onViewChange("home")}
+                    className="hover:text-blue-200 transition-colors">
+                    {t.about}
+                  </a>
+                  <button
+                    onClick={() => onViewChange("family")}
+                    className="hover:text-blue-200 transition-colors">
+                    {t.family}
+                  </button>
+
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsArchiveOpen(!isArchiveOpen)}
+                      className="flex items-center gap-2 hover:text-blue-200 transition-colors">
+                      {t.archive}
+                      <svg
+                        className={`w-3 h-3 transition-transform ${isArchiveOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" strokeWidth="3" />
+                      </svg>
+                    </button>
+                    {isArchiveOpen && (
+                      <div className="absolute top-full right-0 mt-6 w-56 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] py-4 text-[#061c6b] animate-scale-in">
+                        {HISTORICAL_DATA.map((h) => (
+                          <button
+                            key={h.year}
+                            onClick={() => {
+                              onViewChange("archive", h);
+                              setIsArchiveOpen(false);
+                            }}
+                            className="w-full text-left px-6 py-3 hover:bg-[#e8eef1] hover:text-[#1459ed] transition-colors font-bold text-[10px] uppercase border-b border-gray-50 last:border-0">
+                            {h.year} ОНЫ БАРИЛДААН
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <a
+                    href="#collaborate"
+                    className="hover:text-blue-200 transition-colors">
+                    {t.collaborate}
+                  </a>
+                  <button
+                    onClick={() => setLang(lang === "mn" ? "en" : "mn")}
+                    className="border border-white/20 px-4 py-1.5 rounded-full hover:bg-white hover:text-[#1459ed] transition-all">
+                    {lang.toUpperCase()}
+                  </button>
+                </nav>
+              </div>
+            </header>
+            <main className="flex-grow">{children}</main>
+            <footer className="bg-[#061c6b] text-white/40 py-16 text-center text-[10px] font-black tracking-[0.5em] uppercase border-t border-white/5">
+              &copy; 2026 {BIOGRAPHY.name} Мемориал. БҮХ ЭРХ ХУУЛИАР
+              ХАМГААЛАГДСАН.
+            </footer>
+          </div>
+        );
+      };
+
+      const AboutSection = ({ lang, onFamilySelect }) => {
+        const [imgIndex, setImgIndex] = useState(0);
+
+        useEffect(() => {
+          const timer = setInterval(() => {
+            setImgIndex((prev) => (prev + 1) % BIOGRAPHY.images.length);
+          }, 5000);
+          return () => clearInterval(timer);
+        }, []);
+
+        return (
+          <section
+            id="about"
+            className="py-40 px-6 bg-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#1459ed]/5 rounded-full blur-[120px] -mr-40 -mt-40"></div>
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-24">
+              <div className="lg:w-1/2 relative group">
+                <div className="relative w-full aspect-[4/5] bg-[#e8eef1] rounded-[60px] overflow-hidden shadow-[0_50px_100px_rgba(6,28,107,0.15)] z-10 border-[16px] border-white transform hover:-rotate-1 transition-transform duration-700">
+                  {BIOGRAPHY.images.map((img, idx) => (
+                    <img
+                      key={idx}
+                      src={img}
+                      className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === imgIndex ? "opacity-100 scale-100" : "opacity-0 scale-110"}`}
+                    />
+                  ))}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#061c6b]/60 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-12 left-12 text-white z-20">
+                    <span className="text-[10px] font-black uppercase tracking-[0.4em] mb-4 block opacity-80">
+                      Бидний бахархал
+                    </span>
+                    <h4 className="text-4xl font-black uppercase tracking-tighter leading-none">
+                      {BIOGRAPHY.name}
+                    </h4>
+                  </div>
+                  <div className="absolute top-12 right-12 z-20 flex flex-col gap-3">
+                    {BIOGRAPHY.images.map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-1.5 h-10 rounded-full transition-all duration-500 ${i === imgIndex ? "bg-[#1459ed] scale-y-125" : "bg-white/20"}`}></div>
+                    ))}
+                  </div>
+                </div>
+                <div className="absolute -bottom-10 -left-10 w-64 h-64 bg-[#1459ed]/10 rounded-full blur-3xl"></div>
+              </div>
+              <div className="lg:w-1/2 space-y-10 text-left">
+                <span className="text-[#46b0ed] font-black tracking-[0.6em] uppercase text-[10px]">
+                  LEGACY & HONOR
+                </span>
+                <h2 className="text-6xl md:text-8xl font-black text-[#061c6b] leading-[0.9] uppercase tracking-tighter">
+                  {BIOGRAPHY.name} <br />
+                  <span className="text-[#1459ed] text-3xl md:text-5xl mt-6 block italic normal-case tracking-tight">
+                    {BIOGRAPHY.achievements}
+                  </span>
+                </h2>
+                <p className="text-xl text-[#061c6b]/70 leading-relaxed font-medium">
+                  {BIOGRAPHY.description}
+                </p>
+                <div className="flex flex-wrap gap-6 pt-6">
+                  <button className="bg-[#061c6b] text-white font-black py-6 px-16 rounded-3xl hover:bg-[#1459ed] transition-all shadow-2xl uppercase text-[10px] tracking-[0.4em]">
+                    Намтар үзэх
+                  </button>
+                  <button
+                    onClick={onFamilySelect}
+                    className="border border-[#061c6b]/20 px-16 py-6 rounded-3xl font-black text-[10px] uppercase tracking-[0.4em] hover:bg-[#e8eef1] transition-colors">
+                    Үр хүүхдүүд
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      };
+
+      const App = () => {
+        const [view, setView] = useState("home");
+        const [archiveData, setArchiveData] = useState(null);
+        const [lang, setLang] = useState("mn");
+        const t = TRANSLATIONS[lang];
+
+        const handleViewChange = (newView, data = null) => {
+          setView(newView);
+          if (data) setArchiveData(data);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+
+        return (
+          <Layout onViewChange={handleViewChange} lang={lang} setLang={setLang}>
+            {view === "home" && (
+              <div className="animate-fade-up">
+                {/* Hero Section with Countdown */}
+                <section className="relative min-h-screen flex items-center justify-center text-white text-center py-32 px-6 overflow-hidden">
+                  <div
+                    className="absolute inset-0 bg-[#061c6b] z-0"
+                    style={{
+                      backgroundImage: `linear-gradient(rgba(6,28,107,0.7), rgba(6,28,107,0.95)), url('https://picsum.photos/1920/1080?wrestling&blur=2')`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
+                  />
+                  <div className="relative z-10 max-w-5xl mx-auto space-y-12">
+                    <span className="inline-block px-8 py-3 bg-[#1459ed]/20 backdrop-blur-xl rounded-full border border-white/10 text-[10px] font-black tracking-[0.6em] text-[#46b0ed] uppercase mb-4">
+                      {EVENT_INFO.title.prefix}
+                    </span>
+                    <h2 className="text-5xl md:text-[100px] font-black leading-none uppercase tracking-tighter mb-4 animate-scale-in">
+                      ЗУЛЫН ЗАГДАА
+                    </h2>
+                    <h3 className="text-xl md:text-4xl font-black text-[#1459ed] italic tracking-tight uppercase opacity-90">
+                      {EVENT_INFO.title.highlight}
+                    </h3>
+
+                    {/* COUNTDOWN INTEGRATION */}
+                    <div className="py-10">
+                      <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/40 mb-8">
+                        БАРИЛДААН ЭХЛЭХЭД
+                      </p>
+                      <CountdownTimer
+                        targetDate={EVENT_INFO.date}
+                        translations={t}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap justify-center gap-8 pt-10">
+                      <div className="bg-white/5 backdrop-blur-md border border-white/10 px-10 py-5 rounded-3xl flex items-center gap-4 hover:bg-white/10 transition-all">
+                        <span className="text-[12px] font-black uppercase tracking-widest">
+                          {EVENT_INFO.formattedDate}
+                        </span>
+                      </div>
+                      <div className="bg-white/5 backdrop-blur-md border border-white/10 px-10 py-5 rounded-3xl flex items-center gap-4 hover:bg-white/10 transition-all">
+                        <span className="text-[12px] font-black uppercase tracking-widest">
+                          {EVENT_INFO.location}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Stats */}
+                <section className="py-24 bg-white border-y border-gray-100 px-6">
+                  <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+                    <div className="text-center">
+                      <h4 className="text-6xl md:text-8xl font-black text-[#061c6b] tracking-tighter">
+                        128
+                      </h4>
+                      <p className="text-[10px] font-black text-[#061c6b]/30 uppercase tracking-[0.5em] mt-4">
+                        Хүчит бөх
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-6xl md:text-8xl font-black text-[#061c6b] tracking-tighter">
+                        2
+                      </h4>
+                      <p className="text-[10px] font-black text-[#061c6b]/30 uppercase tracking-[0.5em] mt-4">
+                        Дахь жил
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-6xl md:text-8xl font-black text-[#1459ed] tracking-tighter">
+                        100%
+                      </h4>
+                      <p className="text-[10px] font-black text-[#061c6b]/30 uppercase tracking-[0.5em] mt-4">
+                        Уламжлал
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <h4 className="text-6xl md:text-8xl font-black text-[#061c6b] tracking-tighter">
+                        1000+
+                      </h4>
+                      <p className="text-[10px] font-black text-[#061c6b]/30 uppercase tracking-[0.5em] mt-4">
+                        Үзэгчид
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <AboutSection
+                  lang={lang}
+                  onFamilySelect={() => setView("family")}
+                />
+
+                {/* Wrestler Grid */}
+                <section className="py-40 bg-[#e8eef1] px-6">
+                  <div className="max-w-7xl mx-auto text-center">
+                    <h2 className="text-4xl md:text-6xl font-black text-[#061c6b] uppercase tracking-tighter mb-24">
+                      ШИЛДЭГ БӨХЧҮҮД
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+                      {MOCK_WRESTLERS.map((w) => (
+                        <div
+                          key={w.id}
+                          className="group bg-white rounded-[50px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer">
+                          <div className="h-96 relative overflow-hidden">
+                            <img
+                              src={w.photo}
+                              className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                            />
+                            <span className="absolute top-8 left-8 bg-[#1459ed] text-white text-[10px] font-black px-5 py-2 rounded-2xl shadow-xl">
+                              {w.title}
+                            </span>
+                          </div>
+                          <div className="p-10">
+                            <h3 className="text-2xl font-black text-[#061c6b] uppercase tracking-tighter">
+                              {w.name}
+                            </h3>
+                            <p className="text-[10px] font-bold text-[#061c6b]/30 uppercase tracking-widest mt-2">
+                              {w.region}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+
+                {/* Sponsors */}
+                <section className="py-40 bg-white px-6">
+                  <div className="max-w-7xl mx-auto text-center">
+                    <span className="text-[#1459ed] font-black tracking-[0.6em] uppercase text-sm mb-24 block">
+                      ИВЭЭН ТЭТГЭГЧИД
+                    </span>
+                    <div className="grid grid-cols-1 gap-16 mb-24">
+                      <div className="group cursor-pointer">
+                        <div className="w-full max-w-lg h-48 bg-[#e8eef1] rounded-[50px] flex flex-col items-center justify-center mb-8 mx-auto border border-[#1459ed]/5 shadow-sm transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl group-hover:bg-white">
+                          <p className="text-[10px] font-black uppercase text-[#1459ed] tracking-[0.5em] mb-4">
+                            ЕРӨНХИЙ ИВЭЭН ТЭТГЭГЧ
+                          </p>
+                          <p className="text-2xl font-black uppercase text-[#061c6b] tracking-wider px-6 text-center">
+                            {EVENT_INFO.generalSponsor}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                      {EVENT_INFO.sponsors.slice(1).map((s, i) => (
+                        <div key={i} className="group cursor-pointer">
+                          <div className="w-full h-32 bg-[#e8eef1] rounded-[40px] flex flex-col items-center justify-center mb-4 mx-auto border border-[#1459ed]/5 shadow-sm transition-all duration-500 group-hover:scale-105 group-hover:shadow-2xl group-hover:bg-white">
+                            <p className="text-[9px] font-black uppercase text-[#1459ed]/60 tracking-widest mb-2">
+                              {s.type}
+                            </p>
+                            <p className="text-xs md:text-sm font-black uppercase text-[#061c6b] tracking-widest px-4 text-center">
+                              {s.name}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {view === "family" && (
+              <div className="py-40 px-6 animate-fade-up">
+                <div className="max-w-7xl mx-auto text-center space-y-24">
+                  <h2 className="text-6xl font-black text-[#061c6b] uppercase tracking-tighter">
+                    ГЭР БҮЛИЙН ТҮҮХ
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-12">
+                    {FAMILY_DATA.children.map((c, i) => (
+                      <div
+                        key={i}
+                        className="bg-white p-8 rounded-[48px] shadow-sm hover:shadow-xl transition-all">
+                        <img
+                          src={c.photo}
+                          className="w-full aspect-video object-cover rounded-[32px] mb-8 grayscale hover:grayscale-0 transition-all"
+                        />
+                        <h4 className="text-xl font-black text-[#061c6b] uppercase">
+                          {c.name}
+                        </h4>
+                        <p className="text-[10px] font-bold text-[#1459ed] mt-2 uppercase">
+                          {c.role}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+                    {FAMILY_DATA.gallery.map((g, i) => (
+                      <div
+                        key={i}
+                        className="relative aspect-square rounded-[60px] overflow-hidden group shadow-2xl">
+                        <img
+                          src={g.url}
+                          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-125"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#061c6b] to-transparent opacity-0 group-hover:opacity-90 transition-all p-12 flex items-end">
+                          <p className="text-white font-black text-xl uppercase tracking-tighter text-left">
+                            {g.caption}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {view === "archive" && archiveData && (
+              <div className="py-40 px-6 animate-fade-up">
+                <div className="max-w-7xl mx-auto text-center space-y-12">
+                  <h2 className="text-6xl font-black text-[#061c6b] uppercase tracking-tighter">
+                    {archiveData.title}
+                  </h2>
+                  <p className="text-2xl text-[#1459ed] font-medium max-w-3xl mx-auto">
+                    {archiveData.description}
+                  </p>
+                  <div className="h-[400px] bg-[#061c6b] rounded-[60px] flex items-center justify-center border-[16px] border-white shadow-3xl">
+                    <span className="text-white/20 font-black text-2xl uppercase tracking-[0.5em]">
+                      Тэмцээний бичлэг удахгүй
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <AIExpert />
+          </Layout>
+        );
+      };
+
+      const root = createRoot(document.getElementById("root"));
+      root.render(<App />);
+    </script>
+  </body>
+</html>
