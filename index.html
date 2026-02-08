@@ -145,7 +145,8 @@
           "/images/hero.jpg",
         ],
         description:
-          "СҮХБААТАР АЙМГИЙН ХАЛЗАН СУМЫН ХАРЬЯАТ, АЛДАРТ УЯАЧ, ЦЭРГИЙН ЗААН ЦОЛТОЙ САЙХАН БУУРАЙ МИНЬ БАЙЛАА. ТҮҮНИЙ ҮР ХҮҮХДҮҮД, АХ ДҮҮС НЬ ААВЫНХАА ГЭГЭЭН ДУРСГАЛД ЗОРИУЛЖ, САР ШИНИЙН БАЯРТ ЗОРИУЛСАН ХҮЧИТ БӨХИЙН БАРИЛДААНЫГ НУТАГ ОРОНДОО ЖИЛ БҮР УЛАМЖЛАЛ БОЛГОН ЗОХИОН БАЙГУУЛЖ БАЙНА.",
+          "СҮХБААТАР АЙМГИЙН ХАЛЗАН СУМЫН ХАРЬЯАТ, АЛДАРТ УЯАЧ, ЦЭРГИЙН ЗААН.  ТҮҮНИЙ ҮР ХҮҮХДҮҮД, АХ ДҮҮС НЬ ААВЫНХАА ГЭГЭЭН ДУРСГАЛД ЗОРИУЛЖ, САР ШИНИЙН БАЯРТ ЗОРИУЛСАН ХҮЧИТ БӨХИЙН БАРИЛДААНЫГ НУТАГ ОРОНДОО ЖИЛ БҮР УЛАМЖЛАЛ БОЛГОН ЗОХИОН БАЙГУУЛЖ БАЙНА.",
+        desc: "ТҮҮНИЙ ҮР ХҮҮХДҮҮД, АХ ДҮҮС НЬ ААВЫНХАА ГЭГЭЭН ДУРСГАЛД ЗОРИУЛЖ, САР ШИНИЙН БАЯРТ ЗОРИУЛСАН ХҮЧИТ БӨХИЙН БАРИЛДААНЫГ НУТАГ ОРОНДОО ЖИЛ БҮР УЛАМЖЛАЛ БОЛГОН ЗОХИОН БАЙГУУЛЖ БАЙНА.  ",
       };
 
       const FAMILY_DATA = {
@@ -310,6 +311,14 @@
           region: "Сүхбаатар аймаг",
           photo: "/images/nomin.jpg",
           bio: " Аймгийн хурц арслан  ",
+        },
+        {
+          id: "w3",
+          name: "Батсүхийн Зоригтбаатар",
+          title: "Улсын харцага ",
+          region: "Архангай аймаг",
+          photo: "/images/zorig.jpg",
+          bio: " Улсын харцага  ",
         },
       ];
 
@@ -677,14 +686,17 @@
                 <span className="text-[#46b0ed] font-black tracking-[0.6em] uppercase text-[10px]">
                   LEGACY & HONOR
                 </span>
-                <h2 className="text-6xl md:text-8xl font-black text-[#061c6b] leading-[0.9] uppercase tracking-tighter">
+                <h2 className="text-6xl md:text-6xl font-black text-[#061c6b] leading-[0.9] uppercase tracking-tighter">
                   {BIOGRAPHY.name} <br />
-                  <span className="text-[#1459ed] text-3xl md:text-5xl mt-6 block italic normal-case tracking-tight">
+                  <span className="text-[#1459ed] text-3xl md:text-4xl mt-6 block italic normal-case tracking-tight">
                     {BIOGRAPHY.achievements}
                   </span>
                 </h2>
                 <p className="text-xl text-[#061c6b]/70 leading-relaxed font-medium">
                   {BIOGRAPHY.description}
+                  <br />
+                  <br />
+                  {BIOGRAPHY.desc}
                 </p>
                 <div className="flex flex-wrap gap-6 pt-6">
                   <button className="bg-[#061c6b] text-white font-black py-6 px-16 rounded-3xl hover:bg-[#1459ed] transition-all shadow-2xl uppercase text-[10px] tracking-[0.4em]">
