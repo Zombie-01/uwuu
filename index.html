@@ -146,6 +146,11 @@
         ],
         description:
           "СҮХБААТАР АЙМГИЙН ХАЛЗАН СУМЫН ХАРЬЯАТ, АЛДАРТ УЯАЧ, ЦЭРГИЙН ЗААН.",
+        rewards: [
+          "Халзан сум- 2 түрүү",
+          "Уул баян сум- 2 түрүү",
+          "Баяндэлгэр-2 үзүүр",
+        ],
         desc: "ТҮҮНИЙ ҮР ХҮҮХДҮҮД, АХ ДҮҮС НЬ ААВЫНХАА ГЭГЭЭН ДУРСГАЛД ЗОРИУЛЖ, САР ШИНИЙН БАЯРТ ЗОРИУЛСАН ХҮЧИТ БӨХИЙН БАРИЛДААНЫГ НУТАГ ОРОНДОО ЖИЛ БҮР УЛАМЖЛАЛ БОЛГОН ЗОХИОН БАЙГУУЛЖ БАЙНА.  ",
       };
 
@@ -692,11 +697,18 @@
                     {BIOGRAPHY.achievements}
                   </span>
                 </h2>
-                <p className="text-lg text-[#061c6b]/70 leading-relaxed font-medium">
+                <p className="text-lg text-[#061c6b]/70 leading-relaxed uppercase font-medium">
                   {BIOGRAPHY.description}
                   <br />
+                  {BIOGRAPHY.desc} <br />
                   <br />
-                  {BIOGRAPHY.desc}
+                  Амжилтуудаас дурдвал: <br />
+                  {BIOGRAPHY.rewards.map((r, idx) => (
+                    <span key={idx} className="block">
+                      - {r}
+                    </span>
+                  ))}
+                  <br />
                 </p>
                 <div className="flex flex-wrap gap-6 pt-6">
                   <button className="bg-[#061c6b] text-white font-black py-6 px-16 rounded-3xl hover:bg-[#1459ed] transition-all shadow-2xl uppercase text-[10px] tracking-[0.4em]">
@@ -823,9 +835,9 @@
                   <h2 className="text-4xl md:text-6xl font-black text-[#061c6b] uppercase tracking-tighter ">
                     2026 ОНЫ БАРИЛДААНЫ ЗАРЛАЛ
                   </h2>
-                  <div className="relative w-full bg-[#e8eef1] rounded-[60px] overflow-hidden shadow-[0_50px_100px_rgba(6,28,107,0.15)] z-10 border-[16px] border-white transform hover:-rotate-1 transition-transform duration-700">
+                  <div className="relative w-full max-w-[60vw] bg-[#e8eef1] rounded-[60px] overflow-hidden shadow-[0_50px_100px_rgba(6,28,107,0.15)] z-10 border-[16px] border-white transform hover:-rotate-1 transition-transform duration-700">
                     {/* Aspect 3:4 wrapper */}
-                    <div className=" aspect-video w-full">
+                    <div className=" aspect-video w-full ">
                       <iframe
                         className="w-full h-full"
                         src="https://www.youtube.com/embed/PfkrQ_98t0s?si=KGhoi-gVKcdtg5k_"
@@ -836,7 +848,7 @@
                       />
                     </div>
                   </div>
-                  <div className="bg-white p-8 rounded-[48px] shadow-sm hover:shadow-xl transition-all">
+                  <div className="bg-white p-8 rounded-[48px] max-w-[60vw] shadow-sm hover:shadow-xl transition-all">
                     <img
                       src="/images/banner.jpg"
                       className="w-full  object-cover rounded-[32px]  grayscale hover:grayscale-0 transition-all"
